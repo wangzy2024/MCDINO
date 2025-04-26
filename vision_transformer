@@ -131,7 +131,7 @@ class ParNetAttention(nn.Module):
 
     def __init__(self, in_channels):
         super().__init__()
-        self.sse = nn.Sequential(
+        self.see = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Conv2d(in_channels, in_channels, kernel_size=1),
             nn.Sigmoid()
