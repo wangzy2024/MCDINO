@@ -68,31 +68,25 @@ class Mlp(nn.Module):
 class WeightedPermuteMLP(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
         super().__init__()
-        # 这里使用和 MLP 一样的输入参数
         self.mlp_c = Mlp(in_features, hidden_features, out_features, act_layer, drop)
         self.mlp_h = Mlp(in_features, hidden_features, out_features, act_layer, drop)
         self.mlp_w = Mlp(in_features, hidden_features, out_features, act_layer, drop)
 
-        # 权重重计算层
         self.reweight = Mlp(in_features, hidden_features, out_features * 3, act_layer, drop)
 
-        # 投影和 dropout 层
         self.proj = nn.Linear(in_features, out_features)
         self.proj_drop = nn.Dropout(drop)
 
     def forward(self, x):
-        B, N, C = x.shape  # 输入是三维张量，维度为 (B, N, C)
+        B, N, C = x.shape 
 
-        # 使用 MLP 处理每个部分（h, w, c）
         h = self.mlp_h(x)
         w = self.mlp_w(x)
         c = self.mlp_c(x)
 
-        # 计算加权系数
-        a = (h + w + c).mean(1)  # 这里按维度合并计算平均
+        a = (h + w + c).mean(1)  
         a = self.reweight(a).reshape(B, C, 3).permute(2, 0, 1).softmax(dim=0).unsqueeze(2)
 
-        # 按权重进行加权组合
         x = h * a[0] + w * a[1] + c * a[2]
 
         # 投影和 dropout
@@ -151,7 +145,7 @@ class ParNetAttention(nn.Module):
         b, c, _, _ = x.size()
         x1 = self.conv1x1(x)
         x2 = self.conv3x3(x)
-        x3 = self.sse(x) * x
+        x3 = self.see(x) * x
         y = self.silu(x1 + x2 + x3)
         return y
 
